@@ -46,7 +46,7 @@ export default function ImportExcel({ onImport, onCancel }: ImportExcelProps) {
 
         // Convert to JSON
         const jsonData: any[][] = [];
-        worksheet.eachRow((row, rowNumber) => {
+        worksheet.eachRow((row) => {
           const rowData: any[] = [];
           row.eachCell((cell) => {
             rowData.push(cell.value);
