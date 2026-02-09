@@ -1,0 +1,27 @@
+<svg viewBox="0 0 300 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Green circle background -->
+  <circle cx="35" cy="50" r="32" fill="#1DB756"/>
+  
+  <!-- Circuit dots -->
+  <circle cx="20" cy="30" r="4" fill="white"/>
+  <circle cx="20" cy="50" r="4" fill="white"/>
+  <circle cx="20" cy="70" r="4" fill="white"/>
+  <circle cx="35" cy="25" r="4" fill="white"/>
+  <circle cx="35" cy="75" r="4" fill="white"/>
+  <circle cx="50" cy="30" r="4" fill="white"/>
+  <circle cx="50" cy="50" r="4" fill="white"/>
+  <circle cx="50" cy="70" r="4" fill="white"/>
+  
+  <!-- Circuit lines -->
+  <line x1="24" y1="30" x2="31" y2="30" stroke="white" stroke-width="2"/>
+  <line x1="24" y1="50" x2="31" y2="50" stroke="white" stroke-width="2"/>
+  <line x1="24" y1="70" x2="31" y2="70" stroke="white" stroke-width="2"/>
+  <line x1="39" y1="25" x2="46" y2="25" stroke="white" stroke-width="2"/>
+  <line x1="39" y1="75" x2="46" y2="75" stroke="white" stroke-width="2"/>
+  <line x1="35" y1="29" x2="35" y2="36" stroke="white" stroke-width="2"/>
+  <line x1="35" y1="64" x2="35" y2="71" stroke="white" stroke-width="2"/>
+  
+  <!-- Techno Imaging Text -->
+  <text x="75" y="50" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#003DA5">Techno</text>
+  <text x="75" y="70" font-family="Arial, sans-serif" font-size="20" font-weight="500" fill="#1DB756">Imaging</text>
+</svg>
