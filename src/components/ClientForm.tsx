@@ -1,7 +1,7 @@
 ﻿﻿'use client';
 
 import { useState, useEffect } from 'react';
-import { Client, Contact, Location } from '@/types';
+import { Client, Contact, ClientLocation } from '@/types';
 
 interface ClientFormProps {
   client?: Client;
