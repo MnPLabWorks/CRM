@@ -10,7 +10,7 @@ export interface Contact {
   anniversary: string;
 }
 
-export interface Location {
+export interface ClientLocation {
   id: string;
   locationName: string;
   address: string;
@@ -30,7 +30,7 @@ export interface Client {
   email: string;
   phone: string;
   country: string;
-  locations: Location[];
+  locations: ClientLocation[];
   paymentTerm: string;
   paymentRemarks: string;
   paymentMode: string;

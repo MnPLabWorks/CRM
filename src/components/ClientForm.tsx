@@ -22,7 +22,7 @@ export default function ClientForm({ client, existingClients, onSave, onCancel, 
     email: '',
     phone: '',
     country: '',
-    locations: [] as Location[],
+    locations: [] as ClientLocation[],
     paymentTerm: '',
     paymentRemarks: '',
     paymentMode: 'Postpaid',
@@ -96,7 +96,7 @@ export default function ClientForm({ client, existingClients, onSave, onCancel, 
     }));
   };
 
-  const handleLocationChange = (index: number, field: keyof Location, value: string) => {
+  const handleLocationChange = (index: number, field: keyof ClientLocation, value: string) => {
     setFormData((prev) => ({
       ...prev,
       locations: prev.locations.map((loc, i) =>
