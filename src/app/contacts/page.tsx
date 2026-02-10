@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Client, Contact } from '@/types';
+import { Client, Contact, ClientLocation } from '@/types';
+
 import ContactsTable from '@/components/ContactsTable';
 import ContactForm from '@/components/ContactForm';
+import Navigation from '@/components/Navigation';
 
 export default function ContactsPage() {
   const router = useRouter();
@@ -16,28 +18,49 @@ export default function ContactsPage() {
 
   useEffect(() => {
     const isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn');
+
     if (isAdminLoggedIn !== 'true') {
       router.push('/');
-      return;
+    } else {
+      setUserType('admin');
+      loadClients();
     }
-    setUserType('admin');
-    loadClients();
   }, [router]);
+
 
   const loadClients = () => {
     const data = localStorage.getItem('clients');
     if (data) {
-      const parsedClients = JSON.parse(data);
-      setClients(parsedClients);
+      try {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed)) {
+          // Ensure proper data structure with initialized contacts arrays
+          const clientsWithStructure = parsed.map((client: Client) => ({
+            ...client,
+            // Ensure contacts array exists
+            contacts: client.contacts || [],
+            // Ensure locations array exists and each location has contacts array
+            locations: (client.locations || []).map((loc: ClientLocation) => ({
+              ...loc,
+              contacts: loc.contacts || [],
+            })),
+
+          }));
+          setClients(clientsWithStructure);
+        } else {
+
+          setClients([]);
+        }
+      } catch {
+        setClients([]);
+      }
+    } else {
+      setClients([]);
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('userType');
-    localStorage.removeItem('isAdminLoggedIn');
-    router.push('/');
-  };
+
+
 
   const handleSaveContact = (contact: Contact, clientId: string) => {
     let updatedClients;
@@ -48,7 +71,7 @@ export default function ContactsPage() {
         if (client.id === editingClientId) {
           return {
             ...client,
-            contacts: client.contacts.map((c) =>
+            contacts: (client.contacts || []).map((c) =>
               c.id === editingContact.id ? contact : c
             ),
           };
@@ -78,7 +101,7 @@ export default function ContactsPage() {
   const handleUpdateContact = (clientId: string, contactId: string, field: string, value: string) => {
     const updatedClients = clients.map((client) => {
       if (client.id === clientId) {
-        const updatedContacts = client.contacts.map((contact) =>
+        const updatedContacts = (client.contacts || []).map((contact) =>
           contact.id === contactId ? { ...contact, [field]: value } : contact
         );
         return { ...client, contacts: updatedContacts };
@@ -103,23 +126,7 @@ export default function ContactsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header */}
-      <header className="bg-gradient-to-r from-cyan-600 to-blue-600 shadow-lg">
-        <div className="container-custom flex justify-between items-center">
-          <div>
-            <h1 className="text-lg font-bold text-white">Client Contacts</h1>
-            <p className="text-cyan-100 text-xs">
-              View and manage all contacts across clients
-            </p>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700 transition text-sm"
-          >
-            Logout
-          </button>
-        </div>
-      </header>
+      <Navigation />
 
       {/* Main Content */}
       <main className="container-custom py-4">
@@ -133,22 +140,13 @@ export default function ContactsPage() {
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => {
-                  setEditingContact(null);
-                  setEditingClientId(null);
-                  setShowForm(!showForm);
-                }}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
-              >
-                {showForm ? 'Cancel' : 'Add Contact'}
-              </button>
-              <button
                 onClick={() => router.push('/client-list')}
                 className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition text-sm"
               >
                 View Clients
               </button>
             </div>
+
           </div>
         </div>
 
@@ -174,7 +172,7 @@ export default function ContactsPage() {
         )}
 
         <ContactsTable
-          clients={clients.filter(c => !c.isDeleted)}
+          clients={clients}
           onUpdateContact={handleUpdateContact}
           onDeleteContact={handleDeleteContact}
           userType={userType}

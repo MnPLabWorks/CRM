@@ -5,7 +5,9 @@ import { useEffect, useState } from 'react';
 import ClientTable from '../../components/ClientTable';
 import ClientForm from '../../components/ClientForm';
 import ContactForm from '../../components/ContactForm';
-import { Client, Contact } from '@/types';
+import Navigation from '../../components/Navigation';
+import { Client, Contact, ClientLocation } from '@/types';
+
 
 export default function ClientListPage() {
   const router = useRouter();
@@ -31,22 +33,38 @@ export default function ClientListPage() {
     const data = localStorage.getItem('clients');
     if (data) {
       const parsedClients = JSON.parse(data);
+      // Filter out deleted clients and ensure proper data structure
+      const activeClients = parsedClients
+        .filter((client: Client) => !client.isDeleted)
+        .map((client: Client) => ({
+          ...client,
+          // Ensure contacts array exists
+          contacts: client.contacts || [],
+          // Ensure locations array exists and each location has contacts array
+          locations: (client.locations || []).map((loc: ClientLocation) => ({
+            ...loc,
+            contacts: loc.contacts || [],
+          })),
+        }));
       // Assign default serial numbers if missing
-      const clientsWithSerial = parsedClients.map((client: Client, index: number) => ({
+      const clientsWithSerial = activeClients.map((client: Client, index: number) => ({
         ...client,
         serialNumber: client.serialNumber || (index + 1).toString(),
       }));
       setClients(clientsWithSerial);
-      // Save back to localStorage with serial numbers
-      localStorage.setItem('clients', JSON.stringify(clientsWithSerial));
+      // Save back to localStorage with serial numbers and proper structure
+      localStorage.setItem('clients', JSON.stringify(parsedClients.map((client: Client, index: number) => ({
+        ...client,
+        serialNumber: client.serialNumber || (index + 1).toString(),
+        contacts: client.contacts || [],
+        locations: (client.locations || []).map((loc: ClientLocation) => ({
+          ...loc,
+          contacts: loc.contacts || [],
+        })),
+      }))));
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('userType');
-    router.push('/');
-  };
 
   const handleSaveClient = (client: Client) => {
     // Check for duplicate client code
@@ -59,29 +77,43 @@ export default function ClientListPage() {
       return;
     }
 
-    let updatedClients;
-
-    if (editingClient) {
-      updatedClients = clients.map((c) => (c.id === client.id ? client : c));
-    } else {
-      updatedClients = [...clients, client];
+    const data = localStorage.getItem('clients');
+    let parsedClients: Client[] = [];
+    if (data) {
+      parsedClients = JSON.parse(data);
     }
 
-    setClients(updatedClients);
-    localStorage.setItem('clients', JSON.stringify(updatedClients));
+    let updatedParsedClients;
+    if (editingClient) {
+      updatedParsedClients = parsedClients.map((c) => (c.id === client.id ? client : c));
+    } else {
+      updatedParsedClients = [...parsedClients, client];
+    }
+
+    localStorage.setItem('clients', JSON.stringify(updatedParsedClients));
+    const activeClients = updatedParsedClients.filter((c: Client) => !c.isDeleted);
+      const clientsWithSerial = activeClients.map((client: Client, index: number) => ({
+        ...client,
+        serialNumber: client.serialNumber || (index + 1).toString(),
+      }));
+    setClients(clientsWithSerial);
     setShowForm(false);
     setEditingClient(null);
   };
 
   const handleDeleteClient = (id: string) => {
-    const updatedClients = clients.map((c) => c.id === id ? { ...c, isDeleted: true } : c);
-    const activeClients = updatedClients.filter((c) => !c.isDeleted);
-    const clientsWithSerial = activeClients.map((client, index) => ({
-      ...client,
-      serialNumber: (index + 1).toString(),
-    }));
-    setClients(clientsWithSerial);
-    localStorage.setItem('clients', JSON.stringify(updatedClients));
+    const data = localStorage.getItem('clients');
+    if (data) {
+      const parsedClients = JSON.parse(data);
+      const updatedClients = parsedClients.map((c: Client) => c.id === id ? { ...c, isDeleted: true } : c);
+      localStorage.setItem('clients', JSON.stringify(updatedClients));
+      const activeClients = updatedClients.filter((c: Client) => !c.isDeleted);
+      const clientsWithSerial = activeClients.map((client: Client, index: number) => ({
+        ...client,
+        serialNumber: client.serialNumber || (index + 1).toString(),
+      }));
+      setClients(clientsWithSerial);
+    }
   };
 
   const handleUpdateField = (id: string, field: string, value: string) => {
@@ -94,9 +126,18 @@ export default function ClientListPage() {
       }
     }
 
-    const updatedClients = clients.map((c) => (c.id === id ? { ...c, [field]: value } : c));
-    setClients(updatedClients);
-    localStorage.setItem('clients', JSON.stringify(updatedClients));
+    const data = localStorage.getItem('clients');
+    if (data) {
+      const parsedClients = JSON.parse(data);
+      const updatedParsedClients = parsedClients.map((c: Client) => (c.id === id ? { ...c, [field]: value } : c));
+      localStorage.setItem('clients', JSON.stringify(updatedParsedClients));
+      const activeClients = updatedParsedClients.filter((c: Client) => !c.isDeleted);
+      const clientsWithSerial = activeClients.map((client: Client, index: number) => ({
+        ...client,
+        serialNumber: (index + 1).toString(),
+      }));
+      setClients(clientsWithSerial);
+    }
   };
 
   const handleAddContact = (client: Client) => {
@@ -105,40 +146,33 @@ export default function ClientListPage() {
   };
 
   const handleSaveContact = (contact: Contact, clientId: string) => {
-    const updatedClients = clients.map((client) => {
-      if (client.id === clientId) {
-        return {
-          ...client,
-          contacts: [...(client.contacts || []), contact],
-        };
-      }
-      return client;
-    });
-    setClients(updatedClients);
-    localStorage.setItem('clients', JSON.stringify(updatedClients));
+    const data = localStorage.getItem('clients');
+    if (data) {
+      const parsedClients = JSON.parse(data);
+      const updatedParsedClients = parsedClients.map((client: Client) => {
+        if (client.id === clientId) {
+          return {
+            ...client,
+            contacts: [...(client.contacts || []), contact],
+          };
+        }
+        return client;
+      });
+      localStorage.setItem('clients', JSON.stringify(updatedParsedClients));
+      const activeClients = updatedParsedClients.filter((c: Client) => !c.isDeleted);
+      const clientsWithSerial = activeClients.map((client: Client, index: number) => ({
+        ...client,
+        serialNumber: (index + 1).toString(),
+      }));
+      setClients(clientsWithSerial);
+    }
     setShowContactForm(false);
     setSelectedClientForContact(null);
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-gradient-to-r from-cyan-600 to-blue-600 shadow-lg">
-        <div className="container-custom flex justify-between items-center">
-          <div>
-            <h1 className="text-lg font-bold text-white">Client List</h1>
-            <p className="text-cyan-100 text-xs">
-              Manage and filter all clients
-            </p>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700 transition text-sm"
-          >
-            Logout
-          </button>
-        </div>
-      </header>
+      <Navigation />
 
       {/* Main Content */}
       <main className="container-custom py-4">
@@ -179,7 +213,7 @@ export default function ClientListPage() {
         )}
 
         <ClientTable
-          clients={clients.filter(c => !c.isDeleted)}
+          clients={clients}
           onDelete={handleDeleteClient}
           userType={userType}
           onUpdateField={handleUpdateField}

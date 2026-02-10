@@ -39,13 +39,8 @@ export default function ClientDetailsPage() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('userType');
-    router.push('/');
-  };
-
   const handleSaveClient = (client: Client) => {
+
     // Check for duplicate client code
     const isDuplicate = editingClient
       ? clients.some(c => c.id !== client.id && c.clientCode === client.clientCode)
@@ -102,12 +97,7 @@ export default function ClientDetailsPage() {
               Manage and filter all clients
             </p>
           </div>
-          <button
-            onClick={handleLogout}
-            className="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700 transition text-sm"
-          >
-            Logout
-          </button>
+
         </div>
       </header>
 

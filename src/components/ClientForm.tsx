@@ -1,4 +1,4 @@
-﻿﻿'use client';
+﻿﻿﻿﻿﻿﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { Client, Contact, ClientLocation } from '@/types';
@@ -38,6 +38,12 @@ export default function ClientForm({ client, existingClients, onSave, onCancel, 
 
   useEffect(() => {
     if (client) {
+      // Ensure all locations have contacts array initialized
+      const locationsWithContacts = (client.locations || []).map(loc => ({
+        ...loc,
+        contacts: loc.contacts || [],
+      }));
+      
       setFormData({
         serialNumber: client.serialNumber,
         clientCode: client.clientCode,
@@ -48,7 +54,7 @@ export default function ClientForm({ client, existingClients, onSave, onCancel, 
         email: client.email,
         phone: client.phone,
         country: client.country,
-        locations: client.locations || [],
+        locations: locationsWithContacts,
         paymentTerm: client.paymentTerm,
         paymentRemarks: client.paymentRemarks,
         paymentMode: client.paymentMode,
@@ -60,6 +66,7 @@ export default function ClientForm({ client, existingClients, onSave, onCancel, 
         contacts: client.contacts || [],
       });
     } else {
+
       // Reset to blank for new clients
       setFormData({
         serialNumber: '',
@@ -237,14 +244,43 @@ export default function ClientForm({ client, existingClients, onSave, onCancel, 
       return;
     }
 
+    // Aggregate all contacts from locations into the main contacts array
+    const locationContacts: Contact[] = [];
+    updatedFormData.locations.forEach((location) => {
+      if (location.contacts && Array.isArray(location.contacts)) {
+        location.contacts.forEach((contact) => {
+          // Only add contacts that have at least a name or email
+          if (contact.name || contact.email) {
+            locationContacts.push({
+              ...contact,
+              // Ensure all required fields have default values
+              designation: contact.designation || '',
+              phone: contact.phone || '',
+              whatsappNumber: contact.whatsappNumber || '',
+              dob: contact.dob || '',
+              anniversary: contact.anniversary || '',
+            });
+          }
+        });
+      }
+    });
+
+    // Merge existing contacts with location contacts (avoiding duplicates by id)
+    const existingContacts = updatedFormData.contacts || [];
+    const existingContactIds = new Set(existingContacts.map(c => c.id));
+    const newLocationContacts = locationContacts.filter(c => !existingContactIds.has(c.id));
+    const allContacts = [...existingContacts, ...newLocationContacts];
+
     const newClient = {
       id: client?.id || Date.now().toString(),
       ...updatedFormData,
+      contacts: allContacts,
       createdAt: client?.createdAt || new Date().toISOString(),
     };
 
     onSave(newClient);
   };
+
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
@@ -539,11 +575,11 @@ export default function ClientForm({ client, existingClients, onSave, onCancel, 
         )}
       </div>
 
-      <div className="flex gap-3 pt-3">
-        <button type="submit" className="btn-primary flex-1">{client ? 'Update Client' : 'Add Client'}</button>
-        <button type="button" onClick={onCancel} className="btn-secondary flex-1">Cancel</button>
+      <div className="flex gap-1 justify-center pt-3">
+        <button type="submit" className="bg-green-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-green-700 transition">{client ? 'Update Client' : 'Add Client'}</button>
+        <button type="button" onClick={onCancel} className="bg-gray-500 text-white px-3 py-1 rounded text-xs font-medium hover:bg-gray-600 transition">Cancel</button>
         {client && onViewDetails && (
-          <button type="button" onClick={() => onViewDetails(client)} className="btn-secondary flex-1">View Details</button>
+          <button type="button" onClick={() => onViewDetails(client)} className="bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-blue-700 transition">View Details</button>
         )}
       </div>
     </form>

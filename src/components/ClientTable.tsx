@@ -17,9 +17,11 @@ export default function ClientTable({
   onDelete,
   userType,
   onUpdateField,
-  onViewDetails,
   onAddContact,
 }: ClientTableProps) {
+
+
+
   const [filters, setFilters] = useState({
     serialNumber: '',
     clientCode: '',
@@ -36,37 +38,19 @@ export default function ClientTable({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<Client>>({});
 
-  const uniqueSerialNumbers = useMemo(() => {
-    const sns = clients.map(c => c.serialNumber).filter(Boolean);
-    return Array.from(new Set(sns)).sort();
-  }, [clients]);
+  const getUniqueValues = (key: keyof Client) => {
+    const values = clients.map(c => c[key]).filter(Boolean);
+    return Array.from(new Set(values)).sort();
+  };
 
-  const uniqueClientCodes = useMemo(() => {
-    const ccs = clients.map(c => c.clientCode).filter(Boolean);
-    return Array.from(new Set(ccs)).sort();
-  }, [clients]);
+  const uniqueSerialNumbers = useMemo(() => getUniqueValues('serialNumber'), [clients]);
+  const uniqueClientCodes = useMemo(() => getUniqueValues('clientCode'), [clients]);
+  const uniqueCompanyNames = useMemo(() => getUniqueValues('companyName'), [clients]);
+  const uniqueEmails = useMemo(() => getUniqueValues('email'), [clients]);
+  const uniqueDomains = useMemo(() => getUniqueValues('domain'), [clients]);
+  const uniqueCountries = useMemo(() => getUniqueValues('country'), [clients]);
 
-  const uniqueCompanyNames = useMemo(() => {
-    const cns = clients.map(c => c.companyName).filter(Boolean);
-    return Array.from(new Set(cns)).sort();
-  }, [clients]);
-
-  const uniqueEmails = useMemo(() => {
-    const emails = clients.map(c => c.email).filter(Boolean);
-    return Array.from(new Set(emails)).sort();
-  }, [clients]);
-
-  const uniqueDomains = useMemo(() => {
-    const domains = clients.map(c => c.domain).filter(Boolean);
-    return Array.from(new Set(domains)).sort();
-  }, [clients]);
-
-  const uniqueCountries = useMemo(() => {
-    const countries = clients.map(c => c.country).filter(Boolean);
-    return Array.from(new Set(countries)).sort();
-  }, [clients]);
-
-  useEffect(() => {
+  const filteredClientsMemo = useMemo(() => {
     let filtered = clients;
 
     if (filters.serialNumber) {
@@ -119,8 +103,12 @@ export default function ClientTable({
       filtered = filtered.filter((c) => c.paymentMode === filters.paymentMode);
     }
 
-    setFilteredClients(filtered);
+    return filtered;
   }, [filters, clients]);
+
+  useEffect(() => {
+    setFilteredClients(filteredClientsMemo);
+  }, [filteredClientsMemo]);
 
   const handleFilterChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -158,8 +146,9 @@ export default function ClientTable({
 
   const handleSaveEdit = () => {
     if (editingId && editData) {
+      const editableFields = ['serialNumber', 'clientCode', 'companyName', 'status', 'email', 'phone', 'domain', 'country', 'paymentMode'];
       Object.keys(editData).forEach((key) => {
-        if (key !== 'id') {
+        if (editableFields.includes(key)) {
           const value = editData[key as keyof Client] as string;
           onUpdateField?.(editingId, key, value);
         }
@@ -517,63 +506,39 @@ export default function ClientTable({
                           <span className="text-gray-400 text-xs">No locations</span>
                         )}
                       </td>
-                      <td className="px-3 py-2 text-center">
+                      <td className="px-3 py-2">
                         {isEditing ? (
-                          <>
+                          <div className="flex gap-1 justify-center">
                             <button
                               onClick={handleSaveEdit}
-                              className="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 transition mr-1 text-xs"
+                              className="bg-green-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-green-700 transition"
                             >
                               Save
                             </button>
                             <button
                               onClick={handleCancelEdit}
-                              className="bg-gray-600 text-white px-2 py-1 rounded hover:bg-gray-700 transition text-xs"
+                              className="bg-gray-500 text-white px-3 py-1 rounded text-xs font-medium hover:bg-gray-600 transition"
                             >
                               Cancel
                             </button>
-                          </>
+                          </div>
                         ) : (
-                          <>
-                            {onViewDetails && (
-                              <button
-                                onClick={() => onViewDetails(client)}
-                                className="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition mr-1 text-xs"
-                              >
-                                View
-                              </button>
-                            )}
+                          <div className="flex gap-1 justify-center flex-wrap">
                             <button
                               onClick={() => handleStartEdit(client)}
-                              className="bg-cyan-600 text-white px-2 py-1 rounded hover:bg-cyan-700 transition mr-1 text-xs"
+                              className="bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-blue-700 transition"
                             >
                               Edit
                             </button>
-                            {onAddContact && (
-                              <button
-                                onClick={() => onAddContact(client)}
-                                className="bg-purple-600 text-white px-2 py-1 rounded hover:bg-purple-700 transition mr-1 text-xs"
-                              >
-                                Add Contact
-                              </button>
-                            )}
                             {userType === 'admin' && (
                               <button
-                                onClick={() => {
-                                  if (
-                                    window.confirm(
-                                      'Are you sure you want to delete this client?'
-                                    )
-                                  ) {
-                                    onDelete(client.id);
-                                  }
-                                }}
-                                className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 transition text-xs"
+                                onClick={() => onDelete(client.id)}
+                                className="bg-red-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-red-700 transition"
                               >
                                 Delete
                               </button>
                             )}
-                          </>
+                          </div>
                         )}
                       </td>
                     </tr>
