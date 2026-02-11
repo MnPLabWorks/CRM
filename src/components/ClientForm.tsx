@@ -587,9 +587,13 @@ export default function ClientForm({ client, existingClients, onSave, onCancel }
         )}
       </div>
 
-      <div className="flex gap-1 justify-center pt-3">
-        <button type="submit" className="bg-green-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-green-700 transition">{client ? 'Update Client' : 'Add Client'}</button>
-        <button type="button" onClick={onCancel} className="bg-gray-500 text-white px-3 py-1 rounded text-xs font-medium hover:bg-gray-600 transition">Cancel</button>
+      <div className="flex gap-3 pt-3">
+        <button type="submit" className="btn-primary flex-1">
+          {client ? 'Update Client' : 'Add Client'}
+        </button>
+        <button type="button" onClick={onCancel} className="btn-secondary flex-1">
+          Cancel
+        </button>
       </div>
     </form>
   );
