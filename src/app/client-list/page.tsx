@@ -140,11 +140,6 @@ export default function ClientListPage() {
     }
   };
 
-  const handleAddContact = (client: Client) => {
-    setSelectedClientForContact(client);
-    setShowContactForm(true);
-  };
-
   const handleSaveContact = (contact: Contact, clientId: string) => {
     const data = localStorage.getItem('clients');
     if (data) {
@@ -216,7 +211,6 @@ export default function ClientListPage() {
           onDelete={handleDeleteClient}
           userType={userType}
           onUpdateField={handleUpdateField}
-          onViewDetails={(client) => router.push(`/client/${client.id}`)}
         />
       </main>
     </div>

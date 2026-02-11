@@ -12,8 +12,6 @@ export default function ContactsPage() {
   const router = useRouter();
   const [clients, setClients] = useState<Client[]>([]);
   const [userType, setUserType] = useState<string | null>(null);
-  const [editingContact, setEditingContact] = useState<Contact | null>(null);
-  const [editingClientId, setEditingClientId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
@@ -63,39 +61,19 @@ export default function ContactsPage() {
 
 
   const handleSaveContact = (contact: Contact, clientId: string) => {
-    let updatedClients;
-
-    if (editingContact && editingClientId) {
-      // Update existing contact
-      updatedClients = clients.map((client) => {
-        if (client.id === editingClientId) {
-          return {
-            ...client,
-            contacts: (client.contacts || []).map((c) =>
-              c.id === editingContact.id ? contact : c
-            ),
-          };
-        }
-        return client;
-      });
-    } else {
-      // Add new contact
-      updatedClients = clients.map((client) => {
-        if (client.id === clientId) {
-          return {
-            ...client,
-            contacts: [...(client.contacts || []), contact],
-          };
-        }
-        return client;
-      });
-    }
+    const updatedClients = clients.map((client) => {
+      if (client.id === clientId) {
+        return {
+          ...client,
+          contacts: [...(client.contacts || []), contact],
+        };
+      }
+      return client;
+    });
 
     setClients(updatedClients);
     localStorage.setItem('clients', JSON.stringify(updatedClients));
     setShowForm(false);
-    setEditingContact(null);
-    setEditingClientId(null);
   };
 
   const handleUpdateContact = (clientId: string, contactId: string, field: string, value: string) => {
@@ -158,14 +136,12 @@ export default function ContactsPage() {
             </h2>
             <p className="text-gray-600 mb-6">Fill in the contact details below. Required fields are marked with *</p>
             <ContactForm
-              contact={editingContact || undefined}
+              contact={undefined}
               clients={clients}
-              selectedClientId={editingClientId || undefined}
+              selectedClientId={undefined}
               onSave={handleSaveContact}
               onCancel={() => {
                 setShowForm(false);
-                setEditingContact(null);
-                setEditingClientId(null);
               }}
             />
           </div>

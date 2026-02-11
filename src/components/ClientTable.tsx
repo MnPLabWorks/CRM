@@ -8,7 +8,6 @@ interface ClientTableProps {
   onDelete: (id: string) => void;
   userType: string | null;
   onUpdateField?: (id: string, field: string, value: string) => void;
-  onViewDetails?: (client: Client) => void;
 }
 
 export default function ClientTable({
