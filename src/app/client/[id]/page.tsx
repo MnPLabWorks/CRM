@@ -31,13 +31,13 @@ export default function ClientDetailsPage() {
     }
   }, [id, router]);
 
-  const handleUpdateContact = (clientId: string, contactId: string, field: string, value: string) => {
+  const handleUpdateContact = (clientId: string, contactId: string, updates: Partial<Contact>) => {
     if (!client) return;
 
     const updatedClients = JSON.parse(localStorage.getItem('clients') || '[]').map((c: Client) => {
       if (c.id === clientId) {
         const updatedContacts = c.contacts?.map((contact) =>
-          contact.id === contactId ? { ...contact, [field]: value } : contact
+          contact.id === contactId ? { ...contact, ...updates } : contact
         );
         return { ...c, contacts: updatedContacts };
       }

@@ -9,7 +9,6 @@ interface ClientTableProps {
   userType: string | null;
   onUpdateField?: (id: string, field: string, value: string) => void;
   onAddContact?: (clientId: string) => void;
-  onViewDetails?: (client: Client) => void;
 }
 
 export default function ClientTable({
@@ -18,7 +17,6 @@ export default function ClientTable({
   userType,
   onUpdateField,
   onAddContact,
-  onViewDetails,
 }: ClientTableProps) {
 
 
@@ -39,7 +37,7 @@ export default function ClientTable({
   const [editData, setEditData] = useState<Partial<Client>>({});
 
   const getUniqueValues = (key: keyof Client) => {
-    const values = clients.map(c => c[key]).filter(Boolean);
+    const values = clients.map(c => c[key]).filter((v): v is string => typeof v === 'string');
     return Array.from(new Set(values)).sort();
   };
 
@@ -336,7 +334,7 @@ export default function ClientTable({
                   const currentData = isEditing ? editData : client;
 
                   return (
-                    <tr key={client.id} className="hover:bg-gray-50 transition">
+                    <tr key={client.id.toString()} className="hover:bg-gray-50 transition">
                       <td className="px-3 py-2 font-semibold text-gray-900">
                         {isEditing ? (
                           <input
