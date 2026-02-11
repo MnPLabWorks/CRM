@@ -8,10 +8,9 @@ interface ClientFormProps {
   existingClients: Client[];
   onSave: (client: Client) => void;
   onCancel: () => void;
-  onViewDetails?: (client: Client) => void;
 }
 
-export default function ClientForm({ client, existingClients, onSave, onCancel, onViewDetails }: ClientFormProps) {
+export default function ClientForm({ client, existingClients, onSave, onCancel }: ClientFormProps) {
   const [formData, setFormData] = useState({
     serialNumber: '',
     clientCode: '',
@@ -578,9 +577,6 @@ export default function ClientForm({ client, existingClients, onSave, onCancel, 
       <div className="flex gap-1 justify-center pt-3">
         <button type="submit" className="bg-green-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-green-700 transition">{client ? 'Update Client' : 'Add Client'}</button>
         <button type="button" onClick={onCancel} className="bg-gray-500 text-white px-3 py-1 rounded text-xs font-medium hover:bg-gray-600 transition">Cancel</button>
-        {client && onViewDetails && (
-          <button type="button" onClick={() => onViewDetails(client)} className="bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-blue-700 transition">View Details</button>
-        )}
       </div>
     </form>
   );
