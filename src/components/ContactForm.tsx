@@ -35,18 +35,22 @@ export default function ContactForm({
   useEffect(() => {
     if (contact) {
       setFormData({
-        name: contact.name,
-        designation: contact.designation,
-        email: contact.email,
+        name: contact.name || '',
+        designation: contact.designation || '',
+        email: contact.email || '',
         personalEmail: contact.personalEmail || '',
-        phone: contact.phone,
-        whatsappNumber: contact.whatsappNumber,
-        dob: contact.dob,
-        anniversary: contact.anniversary,
+        phone: contact.phone || '',
+        whatsappNumber: contact.whatsappNumber || '',
+        dob: contact.dob || '',
+        anniversary: contact.anniversary || '',
       });
       setUsePhoneAsWhatsapp(contact.phone === contact.whatsappNumber);
     }
-  }, [contact]);
+    // Set selectedClient when selectedClientId is provided
+    if (selectedClientId) {
+      setSelectedClient(selectedClientId);
+    }
+  }, [contact, selectedClientId]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>

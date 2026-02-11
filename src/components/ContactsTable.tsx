@@ -10,7 +10,7 @@ interface ContactWithClient extends Contact {
 
 interface ContactsTableProps {
   clients: Client[];
-  onUpdateContact?: (clientId: string, contactId: string, field: string, value: string) => void;
+  onUpdateContact?: (clientId: string, contactId: string, updates: Partial<Contact>) => void;
   onDeleteContact?: (clientId: string, contactId: string) => void;
   userType: string | null;
 }
@@ -37,19 +37,18 @@ export default function ContactsTable({
   const [editData, setEditData] = useState<Partial<ContactWithClient>>({});
   const [usePhoneAsWhatsapp, setUsePhoneAsWhatsapp] = useState(false);
 
-  // Extract all contacts with client information
+  // Extract all contacts with client information, ensuring uniqueness by contact.id
   useEffect(() => {
     if (!Array.isArray(clients)) {
       setAllContacts([]);
       return;
     }
-    const contacts: ContactWithClient[] = [];
+    const contactMap = new Map<string, ContactWithClient>();
     clients.forEach((client) => {
-
       // Extract contacts from client.contacts
       if (client.contacts && Array.isArray(client.contacts)) {
         client.contacts.forEach((contact) => {
-          contacts.push({
+          contactMap.set(contact.id, {
             ...contact,
             clientName: client.companyName || 'Unknown',
             clientId: client.id,
@@ -61,7 +60,7 @@ export default function ContactsTable({
         client.locations.forEach((location) => {
           if (location && location.contacts && Array.isArray(location.contacts)) {
             location.contacts.forEach((contact) => {
-              contacts.push({
+              contactMap.set(contact.id, {
                 ...contact,
                 clientName: client.companyName || 'Unknown',
                 clientId: client.id,
@@ -71,7 +70,7 @@ export default function ContactsTable({
         });
       }
     });
-    setAllContacts(contacts);
+    setAllContacts(Array.from(contactMap.values()));
   }, [clients]);
 
 
@@ -169,7 +168,7 @@ export default function ContactsTable({
   const handleStartEdit = (contact: ContactWithClient) => {
     setEditingId(contact.id);
     setEditClientId(contact.clientId);
-    setEditData(contact);
+    setEditData({ ...contact });
     setUsePhoneAsWhatsapp(contact.phone === contact.whatsappNumber);
   };
 
@@ -181,12 +180,13 @@ export default function ContactsTable({
 
   const handleSaveEdit = () => {
     if (editingId && editData && editClientId) {
+      const updates: Partial<Contact> = {};
       Object.keys(editData).forEach((key) => {
         if (key !== 'id' && key !== 'clientName' && key !== 'clientId') {
-          const value = editData[key as keyof ContactWithClient] as string;
-          onUpdateContact?.(editClientId, editingId, key, value);
+          updates[key as keyof Contact] = editData[key as keyof ContactWithClient] as string;
         }
       });
+      onUpdateContact?.(editClientId, editingId, updates);
       setEditingId(null);
       setEditClientId(null);
       setEditData({});
@@ -241,39 +241,39 @@ export default function ContactsTable({
             <table className="w-full text-xs">
           <thead className="bg-gradient-to-r from-cyan-600 to-blue-600 border-b-2 border-cyan-700">
             <tr>
-              <th className="px-3 py-2 text-left font-semibold text-white">
+              <th className="px-3 py-2 text-left font-semibold text-white w-24">
                 Client Name
               </th>
-              <th className="px-3 py-2 text-left font-semibold text-white">
+              <th className="px-3 py-2 text-left font-semibold text-white w-24">
                 Contact Name
               </th>
-              <th className="px-3 py-2 text-left font-semibold text-white">
+              <th className="px-3 py-2 text-left font-semibold text-white w-20">
                 Designation
               </th>
-              <th className="px-3 py-2 text-left font-semibold text-white">
+              <th className="px-3 py-2 text-left font-semibold text-white w-28">
                 Email
               </th>
-              <th className="px-3 py-2 text-left font-semibold text-white">
+              <th className="px-3 py-2 text-left font-semibold text-white w-28">
                 Personal Email
               </th>
-              <th className="px-3 py-2 text-left font-semibold text-white">
+              <th className="px-3 py-2 text-left font-semibold text-white w-20">
                 Phone
               </th>
-              <th className="px-3 py-2 text-left font-semibold text-white">
+              <th className="px-3 py-2 text-left font-semibold text-white w-20">
                 WhatsApp
               </th>
-              <th className="px-3 py-2 text-left font-semibold text-white">
+              <th className="px-3 py-2 text-left font-semibold text-white w-16">
                 DOB
               </th>
-              <th className="px-3 py-2 text-left font-semibold text-white">
+              <th className="px-3 py-2 text-left font-semibold text-white w-20">
                 Anniversary
               </th>
-              <th className="px-3 py-2 text-center font-semibold text-white">
+              <th className="px-3 py-2 text-center font-semibold text-white w-20">
                 Actions
               </th>
             </tr>
             <tr className="bg-gray-100">
-              <th className="px-3 py-1">
+              <th className="px-3 py-1 w-24">
                 <input
                   type="text"
                   name="clientName"
@@ -289,7 +289,7 @@ export default function ContactsTable({
                   ))}
                 </datalist>
               </th>
-              <th className="px-3 py-1">
+              <th className="px-3 py-1 w-24">
                 <input
                   type="text"
                   name="contactName"
@@ -305,7 +305,7 @@ export default function ContactsTable({
                   ))}
                 </datalist>
               </th>
-              <th className="px-3 py-1">
+              <th className="px-3 py-1 w-20">
                 <input
                   type="text"
                   name="designation"
@@ -321,7 +321,7 @@ export default function ContactsTable({
                   ))}
                 </datalist>
               </th>
-              <th className="px-3 py-1">
+              <th className="px-3 py-1 w-28">
                 <input
                   type="email"
                   name="email"
@@ -337,7 +337,7 @@ export default function ContactsTable({
                   ))}
                 </datalist>
               </th>
-              <th className="px-3 py-1">
+              <th className="px-3 py-1 w-28">
                 <input
                   type="email"
                   name="personalEmail"
@@ -353,7 +353,7 @@ export default function ContactsTable({
                   ))}
                 </datalist>
               </th>
-              <th className="px-3 py-1">
+              <th className="px-3 py-1 w-20">
                 <input
                   type="tel"
                   name="phone"
@@ -363,13 +363,10 @@ export default function ContactsTable({
                   className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
                 />
               </th>
-              <th className="px-3 py-1">
-              </th>
-              <th className="px-3 py-1">
-              </th>
-              <th className="px-3 py-1">
-              </th>
-              <th className="px-3 py-1 text-center">
+              <th className="px-3 py-1 w-20"></th>
+              <th className="px-3 py-1 w-16"></th>
+              <th className="px-3 py-1 w-20"></th>
+              <th className="px-3 py-1 w-20 text-center">
                 <button
                   onClick={handleClearFilters}
                   className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
@@ -386,10 +383,10 @@ export default function ContactsTable({
 
               return (
                 <tr key={contact.id} className="hover:bg-gray-50 transition">
-                  <td className="px-3 py-2 text-gray-700 font-medium">
+                  <td className="px-3 py-2 text-gray-700 w-24 truncate">
                     {contact.clientName}
                   </td>
-                  <td className="px-3 py-2 text-gray-800 font-medium">
+                  <td className="px-3 py-2 text-gray-800 font-medium w-24">
                     {isEditing ? (
                       <input
                         type="text"
@@ -401,7 +398,7 @@ export default function ContactsTable({
                       contact.name
                     )}
                   </td>
-                  <td className="px-3 py-2 text-gray-700">
+                  <td className="px-3 py-2 text-gray-700 w-20">
                     {isEditing ? (
                       <input
                         type="text"
@@ -413,7 +410,7 @@ export default function ContactsTable({
                       contact.designation
                     )}
                   </td>
-                  <td className="px-3 py-2 text-gray-700">
+                  <td className="px-3 py-2 text-gray-700 w-28">
                     {isEditing ? (
                       <input
                         type="email"
@@ -430,7 +427,7 @@ export default function ContactsTable({
                       </a>
                     )}
                   </td>
-                  <td className="px-3 py-2 text-gray-700">
+                  <td className="px-3 py-2 text-gray-700 w-28">
                     {isEditing ? (
                       <input
                         type="email"
@@ -451,7 +448,7 @@ export default function ContactsTable({
                       )
                     )}
                   </td>
-                  <td className="px-3 py-2 text-gray-700">
+                  <td className="px-3 py-2 text-gray-700 w-20">
                     {isEditing ? (
                       <div className="flex items-center gap-1">
                         <input
@@ -479,7 +476,7 @@ export default function ContactsTable({
                       </a>
                     )}
                   </td>
-                  <td className="px-3 py-2 text-gray-700">
+                  <td className="px-3 py-2 text-gray-700 w-20">
                     {isEditing ? (
                       <input
                         type="tel"
@@ -504,7 +501,7 @@ export default function ContactsTable({
                       </>
                     )}
                   </td>
-                  <td className="px-3 py-2 text-gray-700">
+                  <td className="px-3 py-2 text-gray-700 w-16">
                     {isEditing ? (
                       <input
                         type="date"
@@ -516,7 +513,7 @@ export default function ContactsTable({
                       contact.dob || '-'
                     )}
                   </td>
-                  <td className="px-3 py-2 text-gray-700">
+                  <td className="px-3 py-2 text-gray-700 w-20">
                     {isEditing ? (
                       <input
                         type="date"
@@ -528,7 +525,7 @@ export default function ContactsTable({
                       contact.anniversary || '-'
                     )}
                   </td>
-                  <td className="px-3 py-2 text-center">
+                  <td className="px-3 py-2 text-center w-20">
                     <div className="flex flex-col gap-1 items-center">
                       {isEditing ? (
                         <>

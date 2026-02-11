@@ -8,6 +8,8 @@ interface ClientTableProps {
   onDelete: (id: string) => void;
   userType: string | null;
   onUpdateField?: (id: string, field: string, value: string) => void;
+  onAddContact?: (clientId: string) => void;
+  onViewDetails?: (client: Client) => void;
 }
 
 export default function ClientTable({
@@ -15,6 +17,8 @@ export default function ClientTable({
   onDelete,
   userType,
   onUpdateField,
+  onAddContact,
+  onViewDetails,
 }: ClientTableProps) {
 
 
@@ -27,7 +31,6 @@ export default function ClientTable({
     phone: '',
     status: '',
     domain: '',
-    country: '',
     paymentMode: '',
   });
 
@@ -45,7 +48,6 @@ export default function ClientTable({
   const uniqueCompanyNames = useMemo(() => getUniqueValues('companyName'), [clients]);
   const uniqueEmails = useMemo(() => getUniqueValues('email'), [clients]);
   const uniqueDomains = useMemo(() => getUniqueValues('domain'), [clients]);
-  const uniqueCountries = useMemo(() => getUniqueValues('country'), [clients]);
 
   const filteredClientsMemo = useMemo(() => {
     let filtered = clients;
@@ -90,12 +92,6 @@ export default function ClientTable({
       );
     }
 
-    if (filters.country) {
-      filtered = filtered.filter((c) =>
-        c.country && c.country.toLowerCase().includes(filters.country.toLowerCase())
-      );
-    }
-
     if (filters.paymentMode) {
       filtered = filtered.filter((c) => c.paymentMode === filters.paymentMode);
     }
@@ -126,7 +122,6 @@ export default function ClientTable({
       phone: '',
       status: '',
       domain: '',
-      country: '',
       paymentMode: '',
     });
   };
@@ -143,7 +138,7 @@ export default function ClientTable({
 
   const handleSaveEdit = () => {
     if (editingId && editData) {
-      const editableFields = ['serialNumber', 'clientCode', 'companyName', 'status', 'email', 'phone', 'domain', 'country', 'paymentMode'];
+      const editableFields = ['serialNumber', 'clientCode', 'companyName', 'status', 'email', 'phone', 'domain', 'paymentMode'];
       Object.keys(editData).forEach((key) => {
         if (editableFields.includes(key)) {
           const value = editData[key as keyof Client] as string;
@@ -197,9 +192,6 @@ export default function ClientTable({
                   </th>
                   <th className="px-3 py-2 text-left font-semibold text-white">
                     Domain
-                  </th>
-                  <th className="px-3 py-2 text-left font-semibold text-white">
-                    Country
                   </th>
                   <th className="px-3 py-2 text-left font-semibold text-white">
                     Payment Mode
@@ -313,21 +305,6 @@ export default function ClientTable({
                         <option key={domain} value={domain} />
                       ))}
                     </datalist>
-                  </th>
-                  <th className="px-3 py-1">
-                    <select
-                      name="country"
-                      value={filters.country}
-                      onChange={handleFilterChange}
-                      className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
-                    >
-                      <option value="">All</option>
-                      {uniqueCountries.map((country) => (
-                        <option key={country} value={country}>
-                          {country}
-                        </option>
-                      ))}
-                    </select>
                   </th>
                   <th className="px-3 py-1">
                     <select
@@ -454,18 +431,6 @@ export default function ClientTable({
                           client.domain
                         )}
                       </td>
-                      <td className="px-3 py-2 text-gray-700">
-                        {isEditing ? (
-                          <input
-                            type="text"
-                            value={currentData.country || ''}
-                            onChange={(e) => handleEditDataChange('country', e.target.value)}
-                            className="w-full px-1 py-1 text-xs border border-gray-300 rounded"
-                          />
-                        ) : (
-                          client.country
-                        )}
-                      </td>
                       <td className="px-3 py-2">
                         {isEditing ? (
                           <select
@@ -523,14 +488,20 @@ export default function ClientTable({
                           <div className="flex gap-1 justify-center flex-wrap">
                             <button
                               onClick={() => handleStartEdit(client)}
-                              className="bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-blue-700 transition"
+                              className="bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-blue-700 transition flex-1 min-w-16"
                             >
                               Edit
+                            </button>
+                            <button
+                              onClick={() => onAddContact?.(client.id)}
+                              className="bg-green-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-green-700 transition flex-1 min-w-16"
+                            >
+                              Add Contact
                             </button>
                             {userType === 'admin' && (
                               <button
                                 onClick={() => onDelete(client.id)}
-                                className="bg-red-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-red-700 transition"
+                                className="bg-red-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-red-700 transition flex-1 min-w-16"
                               >
                                 Delete
                               </button>

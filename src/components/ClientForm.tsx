@@ -230,12 +230,17 @@ export default function ClientForm({ client, existingClients, onSave, onCancel }
     let updatedFormData = { ...formData };
 
     if (!client) {
-      // Generate client code and serial number for new clients
-      const nextNumber = (existingClients?.length || 0) + 1;
-      const clientCode = `CLI${nextNumber.toString().padStart(3, '0')}`;
+      // Find the highest serial number from existing clients
+      const existingSerialNumbers = existingClients.map(c => parseInt(c.serialNumber)).filter(n => !isNaN(n));
+      const maxSerial = existingSerialNumbers.length > 0 ? Math.max(...existingSerialNumbers) : 0;
+      const nextNumber = maxSerial + 1;
       const serialNumber = nextNumber.toString();
-      updatedFormData.clientCode = clientCode;
       updatedFormData.serialNumber = serialNumber;
+      // Generate client code only if not provided by user
+      if (!updatedFormData.clientCode) {
+        const clientCode = `CLI${nextNumber.toString().padStart(3, '0')}`;
+        updatedFormData.clientCode = clientCode;
+      }
     }
 
     if (!updatedFormData.clientCode || !updatedFormData.companyName || !updatedFormData.email) {
@@ -264,11 +269,19 @@ export default function ClientForm({ client, existingClients, onSave, onCancel }
       }
     });
 
-    // Merge existing contacts with location contacts (avoiding duplicates by id)
-    const existingContacts = updatedFormData.contacts || [];
-    const existingContactIds = new Set(existingContacts.map(c => c.id));
-    const newLocationContacts = locationContacts.filter(c => !existingContactIds.has(c.id));
-    const allContacts = [...existingContacts, ...newLocationContacts];
+    // For new clients, use only location contacts
+    // For existing clients, merge carefully to avoid duplicates
+    let allContacts: Contact[];
+    if (!client) {
+      // New client - use only location contacts
+      allContacts = locationContacts;
+    } else {
+      // Existing client - merge existing contacts with new location contacts
+      const existingContacts = updatedFormData.contacts || [];
+      const existingContactIds = new Set(existingContacts.map(c => c.id));
+      const newLocationContacts = locationContacts.filter(c => !existingContactIds.has(c.id));
+      allContacts = [...existingContacts, ...newLocationContacts];
+    }
 
     const newClient = {
       id: client?.id || Date.now().toString(),

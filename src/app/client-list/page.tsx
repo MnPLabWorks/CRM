@@ -16,7 +16,6 @@ export default function ClientListPage() {
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
-  const [selectedClientForContact, setSelectedClientForContact] = useState<Client | null>(null);
 
   useEffect(() => {
     const isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn');
@@ -162,7 +161,6 @@ export default function ClientListPage() {
       setClients(clientsWithSerial);
     }
     setShowContactForm(false);
-    setSelectedClientForContact(null);
   };
 
   return (
@@ -171,39 +169,39 @@ export default function ClientListPage() {
 
       {/* Main Content */}
       <main className="container-custom py-4">
-        {/* Form Section */}
-        {showForm && (
+        {showContactForm && editingClient ? (
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 className="text-2xl font-bold mb-2 text-gray-800">{editingClient ? 'Edit Client Information' : 'Add Client Information'}</h2>
-            <p className="text-gray-600 mb-6">Fill in the client details below. Required fields are marked with *</p>
-            <ClientForm
-              client={editingClient || undefined}
-              existingClients={clients}
-              onSave={handleSaveClient}
-              onCancel={() => {
-                setShowForm(false);
-                setEditingClient(null);
-              }}
-            />
-          </div>
-        )}
-
-        {/* Contact Form Section */}
-        {showContactForm && selectedClientForContact && (
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 className="text-2xl font-bold mb-2 text-gray-800">Add Contact for {selectedClientForContact.companyName}</h2>
+            <h2 className="text-2xl font-bold mb-2 text-gray-800">Add Contact for {editingClient.companyName}</h2>
             <p className="text-gray-600 mb-6">Fill in the contact details below. Required fields are marked with *</p>
             <ContactForm
               contact={undefined}
               clients={clients}
-              selectedClientId={selectedClientForContact.id}
+              selectedClientId={editingClient.id}
               onSave={handleSaveContact}
               onCancel={() => {
                 setShowContactForm(false);
-                setSelectedClientForContact(null);
+                setEditingClient(null);
               }}
             />
           </div>
+        ) : (
+          <>
+            {showForm && (
+              <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 className="text-2xl font-bold mb-2 text-gray-800">{editingClient ? 'Edit Client Information' : 'Add Client Information'}</h2>
+                <p className="text-gray-600 mb-6">Fill in the client details below. Required fields are marked with *</p>
+                <ClientForm
+                  client={editingClient || undefined}
+                  existingClients={clients}
+                  onSave={handleSaveClient}
+                  onCancel={() => {
+                    setShowForm(false);
+                    setEditingClient(null);
+                  }}
+                />
+              </div>
+            )}
+          </>
         )}
 
         <ClientTable
@@ -211,6 +209,13 @@ export default function ClientListPage() {
           onDelete={handleDeleteClient}
           userType={userType}
           onUpdateField={handleUpdateField}
+          onAddContact={(clientId) => {
+            const client = clients.find(c => c.id === clientId);
+            if (client) {
+              setEditingClient(client);
+              setShowContactForm(true);
+            }
+          }}
         />
       </main>
     </div>

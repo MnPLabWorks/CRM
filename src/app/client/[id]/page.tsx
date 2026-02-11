@@ -31,12 +31,6 @@ export default function ClientDetailsPage() {
     }
   }, [id, router]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('userType');
-    router.push('/');
-  };
-
   const handleUpdateContact = (clientId: string, contactId: string, field: string, value: string) => {
     if (!client) return;
 
@@ -75,7 +69,6 @@ export default function ClientDetailsPage() {
     let updatedClients;
 
     if (editingContact && editingContact.id) {
-      // Update existing contact
       updatedClients = JSON.parse(localStorage.getItem('clients') || '[]').map((c: Client) => {
         if (c.id === clientId) {
           return {
@@ -88,7 +81,6 @@ export default function ClientDetailsPage() {
         return c;
       });
     } else {
-      // Add new contact
       updatedClients = JSON.parse(localStorage.getItem('clients') || '[]').map((c: Client) => {
         if (c.id === clientId) {
           return {
@@ -100,7 +92,6 @@ export default function ClientDetailsPage() {
       });
     }
 
-    // No need to set clients state, only update the current client
     localStorage.setItem('clients', JSON.stringify(updatedClients));
     setClient(updatedClients.find((c: Client) => c.id === id) || null);
     setShowForm(false);
@@ -125,7 +116,6 @@ export default function ClientDetailsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-gradient-to-r from-cyan-600 to-blue-600 shadow-lg">
         <div className="container-custom flex justify-between items-center">
           <div>
@@ -134,16 +124,9 @@ export default function ClientDetailsPage() {
               Manage and filter all contacts for {client.companyName}
             </p>
           </div>
-          <button
-            onClick={handleLogout}
-            className="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700 transition text-sm"
-          >
-            Logout
-          </button>
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="container-custom py-4">
         <div className="mb-6">
           <div className="flex items-center justify-between">
@@ -173,7 +156,6 @@ export default function ClientDetailsPage() {
           </div>
         </div>
 
-        {/* Form Section */}
         {showForm && (
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <h2 className="text-2xl font-bold mb-2 text-gray-800">

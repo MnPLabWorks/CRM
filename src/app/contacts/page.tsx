@@ -76,13 +76,23 @@ export default function ContactsPage() {
     setShowForm(false);
   };
 
-  const handleUpdateContact = (clientId: string, contactId: string, field: string, value: string) => {
+  const handleUpdateContact = (clientId: string, contactId: string, updates: Partial<Contact>) => {
     const updatedClients = clients.map((client) => {
       if (client.id === clientId) {
+        // Update contacts in main contacts array
         const updatedContacts = (client.contacts || []).map((contact) =>
-          contact.id === contactId ? { ...contact, [field]: value } : contact
+          contact.id === contactId ? { ...contact, ...updates } : contact
         );
-        return { ...client, contacts: updatedContacts };
+
+        // Update contacts in location contacts arrays
+        const updatedLocations = (client.locations || []).map((location) => ({
+          ...location,
+          contacts: (location.contacts || []).map((contact) =>
+            contact.id === contactId ? { ...contact, ...updates } : contact
+          ),
+        }));
+
+        return { ...client, contacts: updatedContacts, locations: updatedLocations };
       }
       return client;
     });
@@ -93,8 +103,16 @@ export default function ContactsPage() {
   const handleDeleteContact = (clientId: string, contactId: string) => {
     const updatedClients = clients.map((client) => {
       if (client.id === clientId) {
-        const updatedContacts = client.contacts.filter((contact) => contact.id !== contactId);
-        return { ...client, contacts: updatedContacts };
+        // Remove from main contacts array
+        const updatedContacts = (client.contacts || []).filter((contact) => contact.id !== contactId);
+        
+        // Remove from location contacts arrays
+        const updatedLocations = (client.locations || []).map((location) => ({
+          ...location,
+          contacts: (location.contacts || []).filter((contact) => contact.id !== contactId),
+        }));
+        
+        return { ...client, contacts: updatedContacts, locations: updatedLocations };
       }
       return client;
     });
@@ -117,6 +135,14 @@ export default function ContactsPage() {
               </p>
             </div>
             <div className="flex gap-2">
+              {!showForm && (
+                <button
+                  onClick={() => setShowForm(true)}
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition text-sm"
+                >
+                  + Add Contact
+                </button>
+              )}
               <button
                 onClick={() => router.push('/client-list')}
                 className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition text-sm"
@@ -129,10 +155,10 @@ export default function ContactsPage() {
         </div>
 
         {/* Form Section */}
-        {showForm && (
+        {showForm ? (
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <h2 className="text-2xl font-bold mb-2 text-gray-800">
-              {editingContact ? 'Edit Contact Information' : 'Add Contact Information'}
+              Add Contact Information
             </h2>
             <p className="text-gray-600 mb-6">Fill in the contact details below. Required fields are marked with *</p>
             <ContactForm
@@ -145,14 +171,14 @@ export default function ContactsPage() {
               }}
             />
           </div>
+        ) : (
+          <ContactsTable
+            clients={clients}
+            onUpdateContact={handleUpdateContact}
+            onDeleteContact={handleDeleteContact}
+            userType={userType}
+          />
         )}
-
-        <ContactsTable
-          clients={clients}
-          onUpdateContact={handleUpdateContact}
-          onDeleteContact={handleDeleteContact}
-          userType={userType}
-        />
       </main>
 
       {/* Footer */}

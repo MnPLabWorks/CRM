@@ -125,7 +125,6 @@ export default function ClientDetailsPage() {
           onDelete={handleDeleteClient}
           userType={userType}
           onUpdateField={handleUpdateField}
-          onViewDetails={(client) => router.push(`/client/${client.id}`)}
         />
       </main>
     </div>
