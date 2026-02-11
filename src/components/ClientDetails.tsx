@@ -8,8 +8,6 @@ interface ClientTableProps {
   onEdit: (client: Client) => void;
   onDelete: (id: string) => void;
   userType: string | null;
-  onUpdateSerialNumber?: (id: string, serialNumber: string) => void;
-  onUpdateClientCode?: (id: string, clientCode: string) => void;
 }
 
 export default function ClientTable({
@@ -17,8 +15,6 @@ export default function ClientTable({
   onEdit,
   onDelete,
   userType,
-  onUpdateSerialNumber,
-  onUpdateClientCode,
 }: ClientTableProps) {
   const [filters, setFilters] = useState({
     serialNumber: '',
@@ -334,20 +330,10 @@ export default function ClientTable({
                 {filteredClients.map((client: Client) => (
                   <tr key={client.id} className="hover:bg-gray-50 transition">
                     <td className="px-3 py-2 font-semibold text-gray-900">
-                      <input
-                        type="text"
-                        value={client.serialNumber}
-                        onChange={(e) => onUpdateSerialNumber?.(client.id, e.target.value)}
-                        className="w-full px-1 py-1 text-xs border border-gray-300 rounded"
-                      />
+                      {client.serialNumber}
                     </td>
                     <td className="px-3 py-2 font-semibold text-gray-900">
-                      <input
-                        type="text"
-                        value={client.clientCode}
-                        onChange={(e) => onUpdateClientCode?.(client.id, e.target.value)}
-                        className="w-full px-1 py-1 text-xs border border-gray-300 rounded"
-                      />
+                      {client.clientCode}
                     </td>
                     <td className="px-3 py-2 text-gray-700">{client.companyName}</td>
                     <td className="px-3 py-2">

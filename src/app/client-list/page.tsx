@@ -189,7 +189,6 @@ export default function ClientListPage() {
                 setShowForm(false);
                 setEditingClient(null);
               }}
-              onViewDetails={(client) => router.push(`/client/${client.id}`)}
             />
           </div>
         )}
@@ -218,7 +217,6 @@ export default function ClientListPage() {
           userType={userType}
           onUpdateField={handleUpdateField}
           onViewDetails={(client) => router.push(`/client/${client.id}`)}
-          onAddContact={handleAddContact}
         />
       </main>
     </div>
